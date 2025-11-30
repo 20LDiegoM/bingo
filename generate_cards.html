@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Bingo Control Table</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <link rel="stylesheet" href="styles/style-generate.css">
+    </head>
+    <body>
+        <h1>Bingo Control Table</h1>
+        <div class="controls">
+            <a href="./index.html">Home</a>
+            <button onclick="generateCards()" id="generateBtn">Generate Cards</button>
+            <button onclick="exportToPDF()" id="exportBtn">Export to PDF</button>
+        </div>
+
+        <div id="cardLimitMessage" class="card-limit-message" style="display: none;">
+
+            <strong>Nota:</strong> Para mejorar el rendimiento, solo se muestran las primeras 50 tarjetas en pantalla. 
+
+            Todas las tarjetas se incluirán en el PDF al exportar.
+
+        </div>
+        <div class="card-container" id="cardContainer"></div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-content">
+                <div class="spinner" id="spinner"></div>
+                <div class="success-icon" id="successIcon"></div>
+                <div class="loading-text" id="loadingText">Generando PDF...</div>
+                <div class="loading-subtext" id="loadingSubtext">Por favor espera mientras procesamos tus tarjetas</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0%</div>
+                <div class="success-message" id="successMessage">¡PDF generado exitosamente!</div>
+                <div class="error-message" id="errorMessage">Error al generar el PDF</div>
+            </div>
+        </div>
+
+        <script src="js/index-generate.js"></script>
+    </body>
+</html>
