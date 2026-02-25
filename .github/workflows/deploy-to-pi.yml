@@ -1,16 +1,28 @@
-- name: Install cloudflared
-  run: |
-    curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
-    chmod +x cloudflared
-    sudo mv cloudflared /usr/local/bin/cloudflared
+name: Deploy Bingo to Raspberry Pi
 
-- name: Deploy via Cloudflare Access
-  env:
-    CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
-    CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
-  run: |
-    cloudflared access ssh \
-      --hostname ssh.murcia-dev.com \
-      --id $CF_ACCESS_CLIENT_ID \
-      --secret $CF_ACCESS_CLIENT_SECRET \
-      --command "cd ~/docker/murcia-dev/bingo && git fetch --all && git reset --hard origin/main && docker restart bingo_site"
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install cloudflared
+        run: |
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+          chmod +x cloudflared
+          sudo mv cloudflared /usr/local/bin/cloudflared
+
+      - name: Deploy via Cloudflare Access
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          cloudflared access ssh \
+            --hostname ssh.murcia-dev.com \
+            --id $CF_ACCESS_CLIENT_ID \
+            --secret $CF_ACCESS_CLIENT_SECRET \
+            --command "cd ~/docker/murcia-dev/bingo && git fetch --all && git reset --hard origin/main && docker restart bingo_site"
