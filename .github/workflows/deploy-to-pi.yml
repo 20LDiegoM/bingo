@@ -1,24 +1,16 @@
-name: Deploy Bingo to Raspberry Pi
+- name: Install cloudflared
+  run: |
+    curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+    chmod +x cloudflared
+    sudo mv cloudflared /usr/local/bin/cloudflared
 
-on:
-  push:
-    branches: [ "main" ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.PI_HOST }}
-          username: ${{ secrets.PI_USER }}
-          key: ${{ secrets.PI_SSH_KEY }}
-          port: ${{ secrets.PI_SSH_PORT || 22 }}
-          script: |
-            set -e
-            cd ~/docker/murcia-dev/bingo
-            git fetch --all
-            git reset --hard origin/main
-            docker restart bingo_site
+- name: Deploy via Cloudflare Access
+  env:
+    CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+    CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+  run: |
+    cloudflared access ssh \
+      --hostname ssh.murcia-dev.com \
+      --id $CF_ACCESS_CLIENT_ID \
+      --secret $CF_ACCESS_CLIENT_SECRET \
+      --command "cd ~/docker/murcia-dev/bingo && git fetch --all && git reset --hard origin/main && docker restart bingo_site"
