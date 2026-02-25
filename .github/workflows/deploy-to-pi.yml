@@ -35,8 +35,8 @@ jobs:
           PI_SSH_KEY: ${{ secrets.PI_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "$PI_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "$PI_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
 
           ssh -p 2222 -o StrictHostKeyChecking=no "$PI_USER@127.0.0.1" \
             "cd ~/docker/murcia-dev/bingo && git fetch --all && git reset --hard origin/main && docker restart bingo_site"
