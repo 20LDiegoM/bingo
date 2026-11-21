@@ -131,7 +131,8 @@
         </main>
 
         <script src="/js/card-core.js?v=3"></script>
-        <script src="/js/index_v2.js?v=4"></script>
+        <script src="/js/audio-kit.js?v=1"></script>
+        <script src="/js/index_v2.js?v=5"></script>
         <script src="/js/verify-card.js?v=3"></script>
         <script src="/js/invite.js?v=1"></script>
         <script>
@@ -140,12 +141,13 @@
             // Atajo: barra espaciadora para sacar número (si no hay ventanas abiertas)
             document.addEventListener("keydown", (e) => {
                 if (e.code !== "Space" || e.repeat) return;
-                if (e.target.closest("input, textarea, button, a")) return;
+                if (e.target.closest("input, textarea")) return;
                 if (document.querySelector(".modal.show, .invite-overlay:not([hidden]), .celebration:not([hidden])")) return;
-                const btn = document.getElementById("tombolaBtn");
-                if (btn.disabled) return;
+                // Siempre saca número, aunque otro botón tenga el foco
+                // (antes, si el foco estaba en "Voz", la barra apagaba la voz)
                 e.preventDefault();
-                btn.click();
+                const btn = document.getElementById("tombolaBtn");
+                if (!btn.disabled) btn.click();
             });
         </script>
     </body>

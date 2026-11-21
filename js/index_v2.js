@@ -505,128 +505,36 @@ function updateAutoDrawButtons() {
     if (stopBtn) stopBtn.hidden = !isAutoDrawActive;
 }
 
-/** @type {HTMLAudioElement|null} Referencia al audio de celebración actualmente reproduciéndose */
-let celebrationAudio = null;
-
-/** @type {HTMLAudioElement|null} Referencia al audio de tómbola actualmente reproduciéndose */
-let tombolaAudio = null;
-
-/**
- * Reproduce un archivo de audio MP3 para la celebración
- * 
- * Crea un elemento de audio, configura el archivo fuente y lo reproduce.
- * Guarda la referencia global para poder controlarlo posteriormente.
- * Incluye manejo de errores para fallos de reproducción.
- * 
- * @param {string} audioPath - Ruta al archivo MP3 a reproducir
- * @returns {HTMLAudioElement|null} Referencia al elemento de audio creado
+/*
+ * Sonidos del juego. Todos pasan por AudioKit (js/audio-kit.js), que usa
+ * Web Audio para que suenen aunque no arranquen en el mismo clic
+ * (voz del número, sorteo automático, Safari/iPad).
  */
+const SOUNDS = {
+    tombola: '/assets/tombola.mp3',
+    fireworks: '/assets/fireworks-b.mp3',
+    number: (n) => `/assets/numeros/${n}.mp3`,
+};
+
+/** Reproduce el audio de celebración */
 function playAudio(audioPath) {
-    try {
-        // Detener audio anterior si existe
-        if (celebrationAudio) {
-            celebrationAudio.pause();
-            celebrationAudio.currentTime = 0;
-        }
-        
-        // Crear nuevo elemento de audio
-        celebrationAudio = new Audio(audioPath);
-        
-        // Configurar propiedades del audio
-        celebrationAudio.volume = 1;
-        celebrationAudio.preload = 'auto';
-        
-        // Reproducir audio
-        const playPromise = celebrationAudio.play();
-        
-        // Manejar la promesa de reproducción
-        if (playPromise !== undefined) {
-            playPromise
-                .then(() => {
-                    console.log('Audio de celebración reproducido exitosamente');
-                })
-                .catch(error => {
-                    console.warn('Error al reproducir audio de celebración:', error);
-                });
-        }
-        
-        return celebrationAudio;
-        
-    } catch (error) {
-        console.error('Error al crear/reproducir audio:', error);
-        return null;
-    }
+    AudioKit.play(audioPath, { channel: 'celebration' });
 }
 
-/**
- * Detiene el audio de celebración si está reproduciéndose
- */
+/** Detiene el audio de celebración */
 function stopAudio() {
-    if (celebrationAudio) {
-        celebrationAudio.pause();
-        celebrationAudio.currentTime = 0;
-        celebrationAudio = null;
-        console.log('Audio de celebración detenido');
-    }
+    AudioKit.stop('celebration');
 }
 
-/**
- * Reproduce el audio de tómbola durante la animación del sorteo
- * 
- * @returns {HTMLAudioElement|null} Referencia al elemento de audio creado
- */
+/** Reproduce el audio de tómbola durante la animación del sorteo */
 function playTombolaAudio() {
-    try {
-        // Detener audio anterior si existe
-        if (tombolaAudio) {
-            tombolaAudio.pause();
-            tombolaAudio.currentTime = 0;
-        }
-        
-        // Crear nuevo elemento de audio
-        tombolaAudio = new Audio('/assets/tombola.mp3');
-        
-        // Configurar propiedades del audio
-        tombolaAudio.volume = 0.8; // Volumen al 80%
-        tombolaAudio.preload = 'auto';
-        tombolaAudio.loop = false; // No repetir
-        
-        // Reproducir audio
-        const playPromise = tombolaAudio.play();
-        
-        // Manejar la promesa de reproducción
-        if (playPromise !== undefined) {
-            playPromise
-                .then(() => {
-                    console.log('Audio de tómbola reproducido exitosamente');
-                })
-                .catch(error => {
-                    console.warn('Error al reproducir audio de tómbola:', error);
-                });
-        }
-        
-        return tombolaAudio;
-        
-    } catch (error) {
-        console.error('Error al crear/reproducir audio de tómbola:', error);
-        return null;
-    }
+    AudioKit.play(SOUNDS.tombola, { channel: 'tombola', volume: 0.8 });
 }
 
-/**
- * Detiene el audio de tómbola si está reproduciéndose
- */
+/** Detiene el audio de tómbola */
 function stopTombolaAudio() {
-    if (tombolaAudio) {
-        tombolaAudio.pause();
-        tombolaAudio.currentTime = 0;
-        tombolaAudio = null;
-        console.log('Audio de tómbola detenido');
-    }
+    AudioKit.stop('tombola');
 }
-
-/** @type {HTMLAudioElement|null} Audio del número que se está cantando */
-let numberAudio = null;
 
 /** @type {boolean} Si la voz que canta los números está activa (se recuerda en el navegador) */
 let voiceEnabled = (() => {
@@ -634,15 +542,21 @@ let voiceEnabled = (() => {
 })();
 
 /**
- * Reproduce el audio pregrabado del número (assets/numeros/N.mp3)
+ * Canta el número con el audio pregrabado (assets/numeros/N.mp3)
  *
  * @param {number} number - Número del 1 al 75
  */
 function playNumberAudio(number) {
     if (!voiceEnabled) return;
-    if (numberAudio) numberAudio.pause();
-    numberAudio = new Audio(`/assets/numeros/${number}.mp3`);
-    numberAudio.play().catch((error) => console.warn('Error al cantar el número:', error));
+    AudioKit.play(SOUNDS.number(number), { channel: 'voice' });
+}
+
+/** Precarga todos los sonidos para que no haya retraso al cantar */
+function preloadSounds() {
+    AudioKit.preload([
+        SOUNDS.tombola,
+        ...Array.from({ length: 75 }, (_, i) => SOUNDS.number(i + 1)),
+    ]);
 }
 
 /** Actualiza el texto del botón de voz */
@@ -654,8 +568,9 @@ function updateVoiceButton() {
 function toggleVoice() {
     voiceEnabled = !voiceEnabled;
     try { localStorage.setItem('bingo_voice', voiceEnabled ? 'on' : 'off'); } catch {}
-    if (!voiceEnabled && numberAudio) numberAudio.pause();
+    if (!voiceEnabled) AudioKit.stop('voice');
     updateVoiceButton();
+    preloadSounds();
 }
 
 /** @type {number|null} Intervalo de los fuegos artificiales de la celebración */
