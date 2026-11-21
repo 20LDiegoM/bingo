@@ -602,6 +602,9 @@ function bingoCelebration(serial) {
 
     sub.textContent = serial ? `Cartón #${serial}` : '¡Tenemos un ganador!';
 
+    // Guardar el patrón actual como jugado
+    if (window.PatternUI) PatternUI.recordPlayed();
+
     // Reiniciar la animación de entrada aunque ya estuviera abierta
     overlay.hidden = true;
     void overlay.offsetWidth;

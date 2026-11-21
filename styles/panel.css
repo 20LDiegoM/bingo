@@ -165,6 +165,32 @@ body {
 .side .bingo-card { margin: 0 auto 10px; max-width: 260px; grid-gap: 8px; }
 .side .cell { height: 38px; border-width: 1px; border-color: #c9c7da; }
 
+/* Nombre, acciones y patrones jugados */
+.pattern-name { font-size: 1.15rem; font-weight: 800; color: var(--ink); margin: -4px 0 10px; }
+.pattern-name.is-empty { font-size: .9rem; font-weight: 500; color: var(--muted); }
+.pattern-actions { display: flex; gap: 8px; }
+.bingo-card.pattern-pop .pattern { animation: numberPop .45s ease-out; }
+
+.played-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid #eceaf5;
+    font-size: .78rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted);
+}
+.played-count { background: var(--soft); color: #4a4fb5; border-radius: 999px; padding: 1px 8px; margin-left: 4px; letter-spacing: 0; }
+.link-btn { border: none; background: none; color: #c62828; font-size: .8rem; font-weight: 700; padding: 0; text-transform: none; letter-spacing: 0; }
+.played-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.played-empty { font-size: .85rem; color: var(--muted); }
+.played-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid #e2e0ef; background: #faf9ff; border-radius: 10px;
+    padding: 4px 8px 4px 4px; font-size: .78rem; font-weight: 600; color: var(--ink);
+    opacity: .8; transition: opacity .15s ease, background .15s ease;
+}
+.played-chip:hover { opacity: 1; background: var(--soft); }
+.mini-grid { display: grid; grid-template-columns: repeat(5, 5px); gap: 1px; }
+.mini-grid i { width: 5px; height: 5px; border-radius: 1px; background: #dcd9ea; }
+.mini-grid i.on { background: var(--gold); }
+
 /* Acciones finales */
 .side-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .verify-btn, .bingo-btn {
