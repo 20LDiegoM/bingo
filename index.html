@@ -1,111 +1,126 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Bingo Control Table V2 - Con Tómbola</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0"></script>
-        <link rel="stylesheet" href="styles/style_v2.css">
-    </head>
-    <body>
-        <div id="overley"></div>
-        
-        <!-- Modal de Tómbola -->
-        <div id="tombolaModal" class="tombola-modal">
-            <div class="tombola-modal-content">
-                <div class="tombola-animation">
-                    <div class="tombola-machine">
-                        <div class="tombola-balls">
-                            <div class="ball">🔴</div>
-                            <div class="ball">🟡</div>
-                            <div class="ball">🟢</div>
-                            <div class="ball">🔵</div>
-                            <div class="ball">🟣</div>
-                        </div>
-                        <div class="tombola-title">🎱 TÓMBOLA 🎱</div>
-                        <div class="tombola-subtitle">Sorteando número...</div>
-                    </div>
-                    
-                    <div class="winning-number" id="winningNumber" style="display: none;">
-                        <div class="letter-display" id="modalLetter">-</div>
-                        <div class="number-display" id="modalNumber">-</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="container-fluid">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#667eea" />
+    <title>Bingo</title>
+    <style>
+        :root {
+            --ink: #1f1d3a;
+            --muted: #6b6a85;
+            --card: #ffffff;
+            --accent: #ff6b6b;
+            --accent-2: #ee5a52;
+            --brand: #667eea;
+            --brand-2: #764ba2;
+            --soft: #f3f1ff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 48px 16px 32px;
+        }
+        header { text-align: center; color: #fff; margin-bottom: 36px; }
+        header .logo { font-size: 4rem; line-height: 1; filter: drop-shadow(0 6px 12px rgba(0,0,0,.25)); }
+        header h1 { margin: 10px 0 6px; font-size: 2.6rem; font-weight: 800; letter-spacing: .5px; text-shadow: 0 3px 10px rgba(0,0,0,.25); }
+        header p { margin: 0; opacity: .85; font-size: 1.1rem; }
+
+        main {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        .option {
+            background: var(--card);
+            border-radius: 22px;
+            padding: 28px 24px 24px;
+            box-shadow: 0 14px 36px rgba(20, 10, 60, .28);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        a.option:hover, .option:focus-within { transform: translateY(-4px); box-shadow: 0 20px 44px rgba(20, 10, 60, .35); }
+        .option .icon {
+            width: 64px; height: 64px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.1rem;
+            border-radius: 18px;
+            background: var(--soft);
+        }
+        .option h2 { margin: 6px 0 0; font-size: 1.35rem; }
+        .option p { margin: 0; color: var(--muted); line-height: 1.45; flex: 1; }
+        .option .cta {
+            margin-top: 10px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            border: none; border-radius: 12px;
+            padding: 13px 16px;
+            font-size: 1rem; font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            background: var(--soft); color: #4a4fb5;
+        }
+        .option.primary .icon { background: linear-gradient(45deg, var(--accent), var(--accent-2)); }
+        .option.primary .cta { background: linear-gradient(45deg, var(--accent), var(--accent-2)); color: #fff; }
+        .row { display: flex; gap: 10px; }
+        .row .cta { flex: 1; white-space: nowrap; padding: 13px 10px; }
+        .row .cta.qr { background: linear-gradient(45deg, var(--brand), var(--brand-2)); color: #fff; }
+        footer { margin-top: 32px; color: rgba(255,255,255,.7); font-size: .9rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">🎱</div>
+        <h1>Bingo</h1>
+        <p>¿Qué quieres hacer?</p>
+    </header>
+
+    <main>
+        <a class="option primary" href="/panel/">
+            <div class="icon">🎲</div>
+            <h2>Dirigir el sorteo</h2>
+            <p>Tómbola con voz, sorteo automático, tablero de números y verificación de cartones ganadores.</p>
+            <span class="cta">Abrir panel →</span>
+        </a>
+
+        <div class="option">
+            <div class="icon">📱</div>
+            <h2>Cartón virtual</h2>
+            <p>Los jugadores juegan desde el celular, con hasta 3 cartones cada uno. Muestra el QR para que se unan.</p>
             <div class="row">
-                <div class="col-12">
-                    <!-- <h1 class="text-center my-5">🎲 Bingo Control Table V2 - Con Tómbola 🎲</h1> -->
-                    <div class="controls">
-                        <a href="javascript:0;" id="tombolaBtn" class="tombola-cta">🎲 Sacar Número de la Tómbola</a>
-                        <a href="javascript:0;" id="autoDrawBtn" class="auto-draw-btn">▶️ Iniciar Sorteo Automático</a>
-                        <a href="javascript:0;" id="pauseBtn" class="pause-btn" style="display: none;">⏸️ Pausar</a>
-                        <a href="javascript:0;" id="resumeBtn" class="resume-btn" style="display: none;">▶️ Reanudar</a>
-                        <a href="javascript:0;" id="voiceBtn">🔊 Voz: Sí</a>
-                        <a href="javascript:0;" id="cleanBtn">🧹 Limpiar</a>
-                        <a href="./generate_cards.html">📄 Generar Cartones</a>
-                        <a href="javascript:0;" id="verifyBtn">🔍 Verificar Cartón</a>
-                        <a href="javascript:0;" id="bingo">🎉 BINGO! 🎉</a>
-                        <a href="javascript:0;" id="resetGame">🔄 Reiniciar Juego</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <!-- Tabla de números -->
-                <div class="col-9">
-                    <div class="bingo-table" id="bingoTable"></div>
-                </div>
-                
-                <!-- Panel lateral con patrón e información -->
-                <div class="col-3">
-                    <!-- Información del juego -->
-                    <div class="game-info-section">
-                        <div class="numbers-left" id="numbersLeft">Números restantes: 75</div>
-                    </div>
-
-                    <!-- Sección de Patrón -->
-                    <div class="pattern-section">
-                        <h2>📋 Patrón</h2>
-                        <div class="bingo-card" id="bingoCard"></div>
-                        <small class="text-muted">Se valida en cualquier posición donde quepa (ej. una columna vale por cualquier columna).</small>
-                    </div>
-
-                    <!-- Historial de números -->
-                    <div class="history-section">
-                        <h3>📈 Últimos números</h3>
-                        <div class="history" id="history"></div>
-                    </div>
-
-                </div>
+                <button class="cta qr" id="inviteBtn">📷 Mostrar QR</button>
+                <a class="cta" href="/carton/">Abrir</a>
             </div>
         </div>
 
-        <!-- Modal de verificación de cartón virtual -->
-        <div class="modal fade" id="verifyModal" tabindex="-1" aria-labelledby="verifyModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="verifyModalLabel">🔍 Verificar cartón</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="verifyForm" class="d-flex gap-2" autocomplete="off">
-                            <input type="text" inputmode="numeric" class="form-control form-control-lg" id="verifySerialInput" placeholder="Serial (ej. 482913)">
-                            <button type="submit" class="btn btn-primary btn-lg">Verificar</button>
-                        </form>
-                        <div id="verifyResult"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <a class="option" href="/generate_cards.html">
+            <div class="icon">📄</div>
+            <h2>Imprimir cartones</h2>
+            <p>Genera cartones en PDF para quienes prefieren jugar en papel.</p>
+            <span class="cta">Generar PDF →</span>
+        </a>
+    </main>
 
-        <script src="js/card-core.js?v=2"></script>
-        <script src="js/index_v2.js?v=2"></script>
-        <script src="js/verify-card.js?v=2"></script>
-    </body>
+    <footer>Consejo: abre el panel en la pantalla grande y proyecta el QR al inicio del juego.</footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="/js/card-core.js?v=3"></script>
+    <script src="/js/invite.js?v=1"></script>
+    <script>
+        document.getElementById("inviteBtn").addEventListener("click", () => BingoInvite.open());
+    </script>
+</body>
 </html>

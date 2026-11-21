@@ -9,6 +9,12 @@
  * Lo usan: carton/index.html (jugadores) e index.html (verificación).
  */
 (function (global) {
+    /** Configuración del juego (compartida por todas las páginas). */
+    const CONFIG = {
+        PASSWORD: "bingo26", // contraseña simple de /carton (visible en el código; solo para ajenos)
+        MAX_CARDS: 3,        // cartones por jugador
+    };
+
     const SERIAL_MIN = 100000;
     const SERIAL_MAX = 999999;
     const LETTERS = ["B", "I", "N", "G", "O"];
@@ -72,5 +78,5 @@
         return isValidSerial(n) ? n : null;
     }
 
-    global.BingoCore = { LETTERS, cardFromSerial, randomSerial, parseSerial, isValidSerial };
+    global.BingoCore = { CONFIG, LETTERS, cardFromSerial, randomSerial, parseSerial, isValidSerial };
 })(window);

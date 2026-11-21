@@ -49,6 +49,8 @@ const pauseBtn = document.getElementById("pauseBtn");
 const resumeBtn = document.getElementById("resumeBtn");
 const numbersLeftDisplay = document.getElementById("numbersLeft");
 const voiceBtn = document.getElementById("voiceBtn");
+const stopBtn = document.getElementById("stopBtn");
+const currentBall = document.getElementById("currentBall");
 
 // Referencias del modal de tómbola
 const tombolaModal = document.getElementById("tombolaModal");
@@ -154,7 +156,7 @@ function drawNumber() {
             // Restaurar botón solo si no está en modo automático
             if (!isAutoDrawActive) {
                 tombolaBtn.disabled = false;
-                tombolaBtn.innerHTML = '🎲 Sacar Número de la Tómbola';
+                tombolaBtn.innerHTML = '🎲 Sacar número';
             }
             
         }, 2000); // 2 segundos para mostrar el número
@@ -271,7 +273,7 @@ function markNumberInTable(number) {
  * Actualiza el contador de números restantes
  */
 function updateNumbersLeft() {
-    numbersLeftDisplay.textContent = `Números restantes: ${availableNumbers.length}`;
+    numbersLeftDisplay.textContent = `Salieron ${75 - availableNumbers.length} · Quedan ${availableNumbers.length}`;
 }
 
 /**
@@ -316,11 +318,26 @@ function removeHistory(number) {
  * destacando el más reciente con una clase especial.
  */
 function renderHistory() {
+    renderCurrentBall();
     history.innerHTML = lastNumbers
         .map((num, idx) => 
             `<div class="${idx === 0 ? "last-number" : ""}">${getLetterForNumber(num)}-${num}</div>`
         )
         .join("");
+}
+
+/**
+ * Muestra el último número en la bola grande del panel
+ */
+function renderCurrentBall() {
+    if (!currentBall) return;
+    const last = lastNumbers[0];
+    currentBall.classList.toggle("is-empty", last === undefined);
+    currentBall.querySelector(".now-letter").textContent = last === undefined ? "–" : getLetterForNumber(last);
+    currentBall.querySelector(".now-number").textContent = last === undefined ? "" : last;
+    currentBall.classList.remove("pop");
+    void currentBall.offsetWidth; // reiniciar animación
+    if (last !== undefined) currentBall.classList.add("pop");
 }
 
 /**
@@ -376,7 +393,7 @@ function resetGame() {
     currentNumber = null;
     
     // Limpiar displays
-    history.innerHTML = "";
+    renderHistory();
     
     // Limpiar patrones de la tarjeta de bingo
     document.querySelectorAll(".pattern").forEach((cell) => 
@@ -385,7 +402,7 @@ function resetGame() {
     
     // Restaurar botón de tómbola
     tombolaBtn.disabled = false;
-    tombolaBtn.innerHTML = '🎲 Sacar Número de la Tómbola';
+    tombolaBtn.innerHTML = '🎲 Sacar número';
     
     // Actualizar contadores
     updateNumbersLeft();
@@ -413,7 +430,7 @@ function startAutoDraw() {
     // Actualizar interfaz
     updateAutoDrawButtons();
     tombolaBtn.disabled = true;
-    tombolaBtn.innerHTML = '🎲 Sorteo Automático Activo';
+    tombolaBtn.innerHTML = '🎲 Sorteo automático activo';
 
     // Iniciar el intervalo de 5 segundos
     autoDrawInterval = setInterval(() => {
@@ -445,7 +462,7 @@ function stopAutoDraw() {
     // Restaurar interfaz
     updateAutoDrawButtons();
     tombolaBtn.disabled = false;
-    tombolaBtn.innerHTML = '🎲 Sacar Número de la Tómbola';
+    tombolaBtn.innerHTML = '🎲 Sacar número';
 
     console.log('Sorteo automático detenido');
 }
@@ -482,25 +499,10 @@ function resumeAutoDraw() {
  * Actualiza la visibilidad y estado de los botones de control automático
  */
 function updateAutoDrawButtons() {
-    if (isAutoDrawActive) {
-        // Modo automático activo
-        autoDrawBtn.style.display = 'none';
-        
-        if (isAutoDrawPaused) {
-            // Pausado
-            pauseBtn.style.display = 'none';
-            resumeBtn.style.display = 'inline-block';
-        } else {
-            // Activo
-            pauseBtn.style.display = 'inline-block';
-            resumeBtn.style.display = 'none';
-        }
-    } else {
-        // Modo manual
-        autoDrawBtn.style.display = 'inline-block';
-        pauseBtn.style.display = 'none';
-        resumeBtn.style.display = 'none';
-    }
+    autoDrawBtn.hidden = isAutoDrawActive;
+    pauseBtn.hidden = !isAutoDrawActive || isAutoDrawPaused;
+    resumeBtn.hidden = !isAutoDrawActive || !isAutoDrawPaused;
+    if (stopBtn) stopBtn.hidden = !isAutoDrawActive;
 }
 
 /** @type {HTMLAudioElement|null} Referencia al audio de celebración actualmente reproduciéndose */
@@ -582,7 +584,7 @@ function playTombolaAudio() {
         }
         
         // Crear nuevo elemento de audio
-        tombolaAudio = new Audio('assets/tombola.mp3');
+        tombolaAudio = new Audio('/assets/tombola.mp3');
         
         // Configurar propiedades del audio
         tombolaAudio.volume = 0.8; // Volumen al 80%
@@ -639,7 +641,7 @@ let voiceEnabled = (() => {
 function playNumberAudio(number) {
     if (!voiceEnabled) return;
     if (numberAudio) numberAudio.pause();
-    numberAudio = new Audio(`assets/numeros/${number}.mp3`);
+    numberAudio = new Audio(`/assets/numeros/${number}.mp3`);
     numberAudio.play().catch((error) => console.warn('Error al cantar el número:', error));
 }
 
@@ -670,7 +672,7 @@ function bingoCelebration() {
     document.getElementById("overley").classList.add("dark-mode");
     
     // Reproducir audio de celebración
-    playAudio('assets/fireworks-b.mp3');
+    playAudio('/assets/fireworks-b.mp3');
     
     // Configuración de la animación de confetti
     let count = 25; // Número total de explosiones
@@ -773,6 +775,7 @@ tombolaBtn.addEventListener("click", () => {
 autoDrawBtn.addEventListener("click", () => startAutoDraw());
 pauseBtn.addEventListener("click", () => pauseAutoDraw());
 resumeBtn.addEventListener("click", () => resumeAutoDraw());
+if (stopBtn) stopBtn.addEventListener("click", () => stopAutoDraw());
 voiceBtn.addEventListener("click", () => toggleVoice());
 
 // Inicialización al cargar la página

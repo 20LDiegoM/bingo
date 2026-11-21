@@ -1,0 +1,199 @@
+/* Panel del sorteo (rediseño). Se carga después de style_v2.css y lo ajusta. */
+
+:root {
+    --ink: #1f1d3a;
+    --muted: #6b6a85;
+    --card: #ffffff;
+    --soft: #f3f1ff;
+    --brand: #667eea;
+    --brand-2: #764ba2;
+    --accent: #ff6b6b;
+    --accent-2: #ee5a52;
+    --gold: #ffb300;
+    --gold-2: #ffd54f;
+}
+
+body {
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    text-align: left;
+    background-attachment: fixed;
+}
+
+/* ---------- Barra superior ---------- */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 24px;
+    background: rgba(31, 29, 58, .35);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,.12);
+}
+.brand {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: .5px;
+}
+.brand:hover { color: #fff; opacity: .9; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.chip {
+    border: 1px solid rgba(255,255,255,.25);
+    background: rgba(255,255,255,.14);
+    color: #fff;
+    font-weight: 600;
+    font-size: .95rem;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .15s ease;
+    white-space: nowrap;
+}
+.chip:hover, .chip[aria-expanded="true"] { background: rgba(255,255,255,.26); }
+.dropdown-menu { border-radius: 14px; padding: 6px; }
+.dropdown-item { border-radius: 8px; padding: 9px 12px; }
+
+/* ---------- Distribución ---------- */
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px;
+    padding: 24px;
+    align-items: start;
+}
+.board { min-width: 0; }
+.board .numbers-wrapper:last-child { margin-bottom: 0; }
+
+/* ---------- Columna lateral ---------- */
+.side { display: flex; flex-direction: column; gap: 14px; }
+.side-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 10px 28px rgba(20, 10, 60, .22);
+    text-align: center;
+}
+.side-label {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+
+/* Número actual */
+.now-ball {
+    width: 116px;
+    height: 116px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: radial-gradient(circle at 30% 28%, #ff8a80 0%, var(--accent) 45%, #c62828 100%);
+    box-shadow: inset -8px -10px 20px rgba(0,0,0,.25), 0 10px 24px rgba(198, 40, 40, .35);
+    line-height: 1;
+}
+.now-ball.is-empty { background: radial-gradient(circle at 30% 28%, #f2f1f8 0%, #d9d7e6 100%); color: #a9a7bd; box-shadow: inset -6px -8px 16px rgba(0,0,0,.08); }
+.now-ball.pop { animation: numberPop .5s ease-out; }
+.now-letter { font-size: 1.3rem; font-weight: 800; opacity: .9; }
+.now-number { font-size: 2.9rem; font-weight: 900; }
+
+.numbers-left {
+    display: inline-block;
+    background: var(--soft);
+    color: #4a4fb5;
+    text-shadow: none;
+    box-shadow: none;
+    font-size: .95rem;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+}
+
+/* Botón principal */
+.draw-btn {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(45deg, var(--accent), var(--accent-2));
+    box-shadow: 0 6px 16px rgba(238, 90, 82, .4);
+    transition: transform .1s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.draw-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(238, 90, 82, .45); }
+.draw-btn:active:not(:disabled) { transform: scale(.98); }
+.draw-btn:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+.kbd-hint { font-size: .8rem; color: var(--muted); margin: 6px 0 10px; }
+.kbd-hint kbd { background: var(--soft); color: var(--ink); border-radius: 4px; padding: 1px 6px; font-size: .75rem; }
+
+/* Sorteo automático */
+.auto-controls { display: flex; gap: 8px; }
+.auto-btn {
+    flex: 1;
+    border: none;
+    border-radius: 12px;
+    padding: 11px 8px;
+    font-size: .95rem;
+    font-weight: 700;
+    color: #4a4fb5;
+    background: var(--soft);
+    transition: background .15s ease;
+}
+.auto-btn:hover { background: #e6e2ff; }
+.auto-btn.stop { color: #c62828; background: #ffecec; }
+.auto-btn.stop:hover { background: #ffdcdc; }
+
+/* Historial */
+.history { gap: 6px; }
+.history div { padding: 8px 12px; min-width: 0; font-size: 1rem; border-width: 1px; border-color: #d9d7e6; }
+.history:empty::after { content: "Aún no sale ningún número"; color: var(--muted); font-size: .9rem; }
+.last-number { transform: none; font-size: 1rem !important; border-color: transparent !important; }
+
+/* Patrón */
+.side .bingo-card { margin: 0 auto 10px; max-width: 260px; grid-gap: 8px; }
+.side .cell { height: 38px; border-width: 1px; border-color: #c9c7da; }
+
+/* Acciones finales */
+.side-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.verify-btn, .bingo-btn {
+    border: none;
+    border-radius: 14px;
+    padding: 14px 10px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    box-shadow: 0 8px 20px rgba(20, 10, 60, .25);
+    transition: transform .1s ease;
+}
+.verify-btn:active, .bingo-btn:active { transform: scale(.97); }
+.verify-btn { background: #fff; color: #4a4fb5; }
+.bingo-btn { color: #4a3200; background: linear-gradient(45deg, var(--gold), var(--gold-2)); }
+
+/* Celebración a pantalla completa */
+#overley.dark-mode { position: fixed; inset: 0; }
+
+/* ---------- Pantallas medianas y celular ---------- */
+@media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; }
+    .side { position: static; order: -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .side-actions { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+    .topbar { padding: 10px 16px; }
+    .hide-sm { display: none; }
+    .layout { padding: 16px; gap: 16px; }
+    .numbers-wrapper { flex-wrap: wrap; }
+    .bingo-header { width: 100%; margin: 0 0 6px; padding: 4px; font-size: 1.5rem; text-align: center; }
+    .number { width: calc(100% / 5 - 8px); font-size: 1.1rem; padding: 8px 0; }
+}

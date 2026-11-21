@@ -167,11 +167,10 @@
         </div>
     </section>
 
-    <script src="/js/card-core.js?v=2"></script>
+    <script src="/js/card-core.js?v=3"></script>
     <script>
-        // Contraseña simple (solo para mantener fuera a gente ajena; es visible en el código)
-        const PASSWORD = "bingo26";
-        const MAX_CARDS = 3;
+        // Contraseña y máximo de cartones: se configuran en js/card-core.js
+        const { PASSWORD, MAX_CARDS } = BingoCore.CONFIG;
         const KEY_UNLOCKED = "bingo_unlocked";
         const KEY_CARDS = "bingo_cards";
         const KEY_CARD_V1 = "bingo_card"; // formato anterior (un solo cartón)

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Panel del Bingo</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <link rel="stylesheet" href="/styles/style_v2.css?v=2">
+        <link rel="stylesheet" href="/styles/panel.css?v=1">
+    </head>
+    <body>
+        <div id="overley"></div>
+
+        <!-- Modal de Tómbola -->
+        <div id="tombolaModal" class="tombola-modal">
+            <div class="tombola-modal-content">
+                <div class="tombola-animation">
+                    <div class="tombola-machine">
+                        <div class="tombola-balls">
+                            <div class="ball">🔴</div>
+                            <div class="ball">🟡</div>
+                            <div class="ball">🟢</div>
+                            <div class="ball">🔵</div>
+                            <div class="ball">🟣</div>
+                        </div>
+                        <div class="tombola-title">🎱 TÓMBOLA 🎱</div>
+                        <div class="tombola-subtitle">Sorteando número...</div>
+                    </div>
+
+                    <div class="winning-number" id="winningNumber" style="display: none;">
+                        <div class="letter-display" id="modalLetter">-</div>
+                        <div class="number-display" id="modalNumber">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de verificación de cartón virtual -->
+        <div class="modal fade" id="verifyModal" tabindex="-1" aria-labelledby="verifyModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="verifyModalLabel">🔍 Verificar cartón</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="verifyForm" class="d-flex gap-2" autocomplete="off">
+                            <input type="text" inputmode="numeric" class="form-control form-control-lg" id="verifySerialInput" placeholder="Serial (ej. 482913)">
+                            <button type="submit" class="btn btn-primary btn-lg">Verificar</button>
+                        </form>
+                        <div id="verifyResult"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra superior: acciones poco frecuentes -->
+        <header class="topbar">
+            <a href="/" class="brand" title="Ir al inicio">🎱 <span>Bingo</span></a>
+            <div class="topbar-actions">
+                <button type="button" class="chip" id="voiceBtn">🔊 Voz: Sí</button>
+                <button type="button" class="chip" id="inviteBtn">📱 <span class="hide-sm">Invitar jugadores</span></button>
+                <div class="dropdown">
+                    <button type="button" class="chip" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Más opciones">⋯ <span class="hide-sm">Más</span></button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><button type="button" class="dropdown-item" id="cleanBtn">🧹 Limpiar patrón y marcas manuales</button></li>
+                        <li><a class="dropdown-item" href="/generate_cards.html">📄 Imprimir cartones (PDF)</a></li>
+                        <li><a class="dropdown-item" href="/">🏠 Ir al inicio</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button type="button" class="dropdown-item text-danger" id="resetGame">🔄 Reiniciar juego</button></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <main class="layout">
+            <!-- Tablero de los 75 números -->
+            <section class="board" aria-label="Tablero de números">
+                <div class="bingo-table" id="bingoTable"></div>
+            </section>
+
+            <!-- Columna de control -->
+            <aside class="side">
+                <div class="side-card now">
+                    <div class="side-label">Último número</div>
+                    <div class="now-ball is-empty" id="currentBall">
+                        <span class="now-letter">–</span>
+                        <span class="now-number"></span>
+                    </div>
+                    <div class="numbers-left" id="numbersLeft">Números restantes: 75</div>
+
+                    <button type="button" class="draw-btn" id="tombolaBtn">🎲 Sacar número</button>
+                    <div class="kbd-hint">o presiona <kbd>Espacio</kbd></div>
+
+                    <div class="auto-controls">
+                        <button type="button" class="auto-btn" id="autoDrawBtn">▶️ Sorteo automático</button>
+                        <button type="button" class="auto-btn" id="pauseBtn" hidden>⏸️ Pausar</button>
+                        <button type="button" class="auto-btn" id="resumeBtn" hidden>▶️ Reanudar</button>
+                        <button type="button" class="auto-btn stop" id="stopBtn" hidden>⏹️ Detener</button>
+                    </div>
+                </div>
+
+                <div class="side-actions">
+                    <button type="button" class="verify-btn" id="verifyBtn">🔍 Verificar cartón</button>
+                    <button type="button" class="bingo-btn" id="bingo">🎉 ¡BINGO!</button>
+                </div>
+
+                <div class="side-card">
+                    <div class="side-label">Últimos números</div>
+                    <div class="history" id="history"></div>
+                </div>
+
+                <div class="side-card">
+                    <div class="side-label">Patrón</div>
+                    <div class="bingo-card" id="bingoCard"></div>
+                    <small class="text-muted d-block">Toca las casillas para armar el patrón. Se valida en cualquier posición donde quepa.</small>
+                </div>
+
+            </aside>
+        </main>
+
+        <script src="/js/card-core.js?v=3"></script>
+        <script src="/js/index_v2.js?v=3"></script>
+        <script src="/js/verify-card.js?v=2"></script>
+        <script src="/js/invite.js?v=1"></script>
+        <script>
+            document.getElementById("inviteBtn").addEventListener("click", () => BingoInvite.open());
+
+            // Atajo: barra espaciadora para sacar número (si no hay ventanas abiertas)
+            document.addEventListener("keydown", (e) => {
+                if (e.code !== "Space" || e.repeat) return;
+                if (e.target.closest("input, textarea, button, a")) return;
+                if (document.querySelector(".modal.show, .invite-overlay:not([hidden])")) return;
+                const btn = document.getElementById("tombolaBtn");
+                if (btn.disabled) return;
+                e.preventDefault();
+                btn.click();
+            });
+        </script>
+    </body>
+</html>
