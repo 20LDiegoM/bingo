@@ -48,6 +48,7 @@ const autoDrawBtn = document.getElementById("autoDrawBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const resumeBtn = document.getElementById("resumeBtn");
 const numbersLeftDisplay = document.getElementById("numbersLeft");
+const voiceBtn = document.getElementById("voiceBtn");
 
 // Referencias del modal de tómbola
 const tombolaModal = document.getElementById("tombolaModal");
@@ -213,6 +214,9 @@ function showTombolaModal() {
 function showWinningNumber(number) {
     // Detener audio de tómbola
     stopTombolaAudio();
+
+    // Cantar el número (B 5, I 22, ...)
+    playNumberAudio(number);
     
     // Ocultar máquina de tómbola
     document.querySelector('.tombola-machine').style.display = 'none';
@@ -619,6 +623,39 @@ function stopTombolaAudio() {
     }
 }
 
+/** @type {HTMLAudioElement|null} Audio del número que se está cantando */
+let numberAudio = null;
+
+/** @type {boolean} Si la voz que canta los números está activa (se recuerda en el navegador) */
+let voiceEnabled = (() => {
+    try { return localStorage.getItem('bingo_voice') !== 'off'; } catch { return true; }
+})();
+
+/**
+ * Reproduce el audio pregrabado del número (assets/numeros/N.mp3)
+ *
+ * @param {number} number - Número del 1 al 75
+ */
+function playNumberAudio(number) {
+    if (!voiceEnabled) return;
+    if (numberAudio) numberAudio.pause();
+    numberAudio = new Audio(`assets/numeros/${number}.mp3`);
+    numberAudio.play().catch((error) => console.warn('Error al cantar el número:', error));
+}
+
+/** Actualiza el texto del botón de voz */
+function updateVoiceButton() {
+    voiceBtn.innerHTML = voiceEnabled ? '🔊 Voz: Sí' : '🔇 Voz: No';
+}
+
+/** Activa o desactiva la voz que canta los números */
+function toggleVoice() {
+    voiceEnabled = !voiceEnabled;
+    try { localStorage.setItem('bingo_voice', voiceEnabled ? 'on' : 'off'); } catch {}
+    if (!voiceEnabled && numberAudio) numberAudio.pause();
+    updateVoiceButton();
+}
+
 /**
  * Ejecuta la animación de celebración de BINGO
  * 
@@ -736,6 +773,7 @@ tombolaBtn.addEventListener("click", () => {
 autoDrawBtn.addEventListener("click", () => startAutoDraw());
 pauseBtn.addEventListener("click", () => pauseAutoDraw());
 resumeBtn.addEventListener("click", () => resumeAutoDraw());
+voiceBtn.addEventListener("click", () => toggleVoice());
 
 // Inicialización al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
@@ -743,6 +781,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeBingoTable();
     updateNumbersLeft();
     updateAutoDrawButtons(); // Configurar botones de sorteo automático
+    updateVoiceButton();
     
     console.log('Bingo V2 inicializado correctamente');
 });
