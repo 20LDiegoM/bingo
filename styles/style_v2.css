@@ -462,3 +462,35 @@ h2, h3 {
         padding: 8px;
     }
 }
+
+/* Verificación de cartón virtual */
+#verifyResult .vc-title { font-weight: bold; margin: 18px 0 10px; }
+#verifyResult .vc-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    max-width: 320px;
+    margin: 0 auto 16px;
+}
+#verifyResult .vc-head {
+    font-weight: 900;
+    font-size: 1.3rem;
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px 0;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+}
+#verifyResult .vc-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fafafa;
+}
+#verifyResult .vc-hit { background: #4caf50; border-color: #388e3c; color: #fff; }
+#verifyResult .vc-pattern-ok { box-shadow: 0 0 0 3px #ffb300; }
+#verifyResult .vc-pattern-miss { box-shadow: 0 0 0 3px #e53935; }

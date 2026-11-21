@@ -47,6 +47,7 @@
                         <a href="javascript:0;" id="resumeBtn" class="resume-btn" style="display: none;">▶️ Reanudar</a>
                         <a href="javascript:0;" id="cleanBtn">🧹 Limpiar</a>
                         <a href="./generate_cards.html">📄 Generar Cartones</a>
+                        <a href="javascript:0;" id="verifyBtn">🔍 Verificar Cartón</a>
                         <a href="javascript:0;" id="bingo">🎉 BINGO! 🎉</a>
                         <a href="javascript:0;" id="resetGame">🔄 Reiniciar Juego</a>
                     </div>
@@ -82,6 +83,27 @@
             </div>
         </div>
 
+        <!-- Modal de verificación de cartón virtual -->
+        <div class="modal fade" id="verifyModal" tabindex="-1" aria-labelledby="verifyModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="verifyModalLabel">🔍 Verificar cartón</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="verifyForm" class="d-flex gap-2" autocomplete="off">
+                            <input type="text" inputmode="numeric" class="form-control form-control-lg" id="verifySerialInput" placeholder="Serial (ej. 482913)">
+                            <button type="submit" class="btn btn-primary btn-lg">Verificar</button>
+                        </form>
+                        <div id="verifyResult"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="js/card-core.js"></script>
         <script src="js/index_v2.js"></script>
+        <script src="js/verify-card.js"></script>
     </body>
 </html>

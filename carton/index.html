@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#667eea" />
+    <title>Mi Cartón de Bingo</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        .screen { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; gap: 18px; }
+        .screen.active { display: flex; }
+
+        h1 { color: #fff; margin: 8px 0 0; text-shadow: 2px 2px 4px rgba(0,0,0,.3); font-size: 1.9rem; text-align: center; }
+        .subtitle { color: rgba(255,255,255,.85); margin: 0; text-align: center; }
+
+        .panel {
+            width: 100%;
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        }
+
+        input[type=password] {
+            width: 100%;
+            font-size: 1.15rem;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            text-align: center;
+        }
+        input[type=password]:focus { border-color: #667eea; }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            box-shadow: 0 4px 10px rgba(0,0,0,.25);
+            transition: transform .1s ease;
+        }
+        .btn:active { transform: scale(.97); }
+        .btn.secondary { background: linear-gradient(45deg, #2196f3, #21cbf3); }
+        .btn.ghost { background: rgba(255,255,255,.18); box-shadow: none; font-size: 1rem; padding: 12px; }
+
+        .error { color: #e53935; font-weight: bold; min-height: 1.3em; margin: 10px 0 0; text-align: center; }
+        .stack { display: flex; flex-direction: column; gap: 12px; }
+
+        /* Cartón */
+        .card { width: 100%; background: #fff; border-radius: 16px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .head {
+            aspect-ratio: 1 / .8;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; font-weight: 900; color: #fff;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        .num {
+            aspect-ratio: 1;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; font-weight: bold;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background .15s ease, transform .1s ease;
+        }
+        .num:active { transform: scale(.94); }
+        .num.marked { background: #ff6b6b; border-color: #ee5a52; color: #fff; }
+        .num.marked::after {
+            content: "";
+            position: absolute; inset: 14%;
+            border: 3px solid rgba(255,255,255,.7);
+            border-radius: 50%;
+        }
+        .num.free { background: linear-gradient(45deg, #ffd54f, #ffb300); border-color: #ffb300; color: #fff; font-size: 1.6rem; cursor: default; }
+
+        .serial {
+            margin-top: 12px;
+            text-align: center;
+            font-size: .95rem;
+            color: #666;
+        }
+        .serial strong { font-size: 1.35rem; color: #333; letter-spacing: 1px; }
+        .hint { color: rgba(255,255,255,.9); font-size: .9rem; text-align: center; margin: 0; }
+    </style>
+</head>
+<body>
+    <!-- 1. Contraseña -->
+    <section class="screen" id="lockScreen">
+        <h1>🎱 Bingo</h1>
+        <p class="subtitle">Ingresa la contraseña para jugar</p>
+        <form class="panel" id="lockForm" autocomplete="off">
+            <div class="stack">
+                <input type="password" id="passwordInput" placeholder="Contraseña" aria-label="Contraseña" />
+                <button type="submit" class="btn secondary">Entrar</button>
+            </div>
+            <p class="error" id="lockError"></p>
+        </form>
+    </section>
+
+    <!-- 2. Generar cartón -->
+    <section class="screen" id="generateScreen">
+        <h1>🎱 Bingo</h1>
+        <p class="subtitle">¡Bienvenido! Genera tu cartón para empezar.</p>
+        <div class="panel">
+            <button class="btn" id="generateBtn">🎲 Generar mi cartón</button>
+        </div>
+    </section>
+
+    <!-- 3. Cartón -->
+    <section class="screen" id="cardScreen">
+        <h1>🎱 Mi Cartón</h1>
+        <div class="card">
+            <div class="grid" id="grid"></div>
+            <div class="serial">Cartón <strong id="serialLabel">#000000</strong></div>
+        </div>
+        <p class="hint">Toca un número para marcarlo. Si cantas BINGO, muestra tu número de cartón.</p>
+        <button class="btn ghost" id="clearBtn">🧹 Limpiar marcas</button>
+        <button class="btn ghost" id="newCardBtn">🔄 Cambiar cartón</button>
+    </section>
+
+    <script src="/js/card-core.js"></script>
+    <script>
+        // Contraseña simple (solo para mantener fuera a gente ajena; es visible en el código)
+        const PASSWORD = "bingo26";
+        const KEY_UNLOCKED = "bingo_unlocked";
+        const KEY_CARD = "bingo_card";
+
+        const storage = {
+            get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+            set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
+            remove(key) { try { localStorage.removeItem(key); } catch {} },
+        };
+
+        const $ = (id) => document.getElementById(id);
+        let state = null; // { serial, marked: [indices 0-24] }
+
+        function show(screenId) {
+            document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === screenId));
+        }
+
+        function save() { storage.set(KEY_CARD, state); }
+
+        function renderCard() {
+            const grid = BingoCore.cardFromSerial(state.serial);
+            const el = $("grid");
+            el.innerHTML = "";
+
+            BingoCore.LETTERS.forEach((l) => {
+                const h = document.createElement("div");
+                h.className = "head";
+                h.textContent = l;
+                el.appendChild(h);
+            });
+
+            grid.flat().forEach((value, idx) => {
+                const cell = document.createElement("div");
+                cell.className = "num";
+                if (value === null) {
+                    cell.classList.add("free");
+                    cell.textContent = "★";
+                } else {
+                    cell.textContent = value;
+                    if (state.marked.includes(idx)) cell.classList.add("marked");
+                    cell.addEventListener("click", () => {
+                        const on = cell.classList.toggle("marked");
+                        state.marked = on
+                            ? [...state.marked, idx]
+                            : state.marked.filter((i) => i !== idx);
+                        save();
+                    });
+                }
+                el.appendChild(cell);
+            });
+
+            $("serialLabel").textContent = "#" + state.serial;
+            show("cardScreen");
+        }
+
+        function route() {
+            if (!storage.get(KEY_UNLOCKED)) return show("lockScreen");
+            const saved = storage.get(KEY_CARD);
+            if (saved && BingoCore.isValidSerial(saved.serial)) {
+                state = { serial: saved.serial, marked: Array.isArray(saved.marked) ? saved.marked : [] };
+                return renderCard();
+            }
+            show("generateScreen");
+        }
+
+        $("lockForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const value = $("passwordInput").value.trim().toLowerCase();
+            if (value === PASSWORD) {
+                storage.set(KEY_UNLOCKED, true);
+                $("lockError").textContent = "";
+                route();
+            } else {
+                $("lockError").textContent = "Contraseña incorrecta";
+                $("passwordInput").select();
+            }
+        });
+
+        $("generateBtn").addEventListener("click", () => {
+            state = { serial: BingoCore.randomSerial(), marked: [] };
+            save();
+            renderCard();
+        });
+
+        $("clearBtn").addEventListener("click", () => {
+            if (!confirm("¿Quitar todas las marcas de tu cartón?")) return;
+            state.marked = [];
+            save();
+            renderCard();
+        });
+
+        $("newCardBtn").addEventListener("click", () => {
+            if (!confirm("¿Seguro? Perderás este cartón (#" + state.serial + ") y se te dará uno nuevo.")) return;
+            storage.remove(KEY_CARD);
+            state = null;
+            show("generateScreen");
+        });
+
+        route();
+    </script>
+</body>
+</html>
