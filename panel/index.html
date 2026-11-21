@@ -9,10 +9,18 @@
         <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
         <link rel="stylesheet" href="/styles/style_v2.css?v=2">
-        <link rel="stylesheet" href="/styles/panel.css?v=1">
+        <link rel="stylesheet" href="/styles/panel.css?v=2">
     </head>
     <body>
-        <div id="overley"></div>
+        <!-- Celebración de BINGO -->
+        <div id="celebration" class="celebration" hidden role="dialog" aria-label="¡BINGO!">
+            <div class="celebration-content">
+                <div class="celebration-title">¡BINGO!</div>
+                <div class="celebration-sub" id="celebrationSub"></div>
+                <button type="button" class="celebration-close" id="celebrationClose">Continuar</button>
+                <div class="celebration-hint">o toca en cualquier parte</div>
+            </div>
+        </div>
 
         <!-- Modal de Tómbola -->
         <div id="tombolaModal" class="tombola-modal">
@@ -123,8 +131,8 @@
         </main>
 
         <script src="/js/card-core.js?v=3"></script>
-        <script src="/js/index_v2.js?v=3"></script>
-        <script src="/js/verify-card.js?v=2"></script>
+        <script src="/js/index_v2.js?v=4"></script>
+        <script src="/js/verify-card.js?v=3"></script>
         <script src="/js/invite.js?v=1"></script>
         <script>
             document.getElementById("inviteBtn").addEventListener("click", () => BingoInvite.open());
@@ -133,7 +141,7 @@
             document.addEventListener("keydown", (e) => {
                 if (e.code !== "Space" || e.repeat) return;
                 if (e.target.closest("input, textarea, button, a")) return;
-                if (document.querySelector(".modal.show, .invite-overlay:not([hidden])")) return;
+                if (document.querySelector(".modal.show, .invite-overlay:not([hidden]), .celebration:not([hidden])")) return;
                 const btn = document.getElementById("tombolaBtn");
                 if (btn.disabled) return;
                 e.preventDefault();

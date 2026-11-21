@@ -71,6 +71,17 @@
         return lines.filter((line) => line.idx.every((i) => hit[i])).map((line) => line.name);
     }
 
+    const celebrateBtn = (serial) =>
+        `<button type="button" class="btn btn-warning fw-bold w-100 mt-3 celebrate-btn" data-serial="${serial}">🎉 ¡Celebrar!</button>`;
+
+    // Botón "Celebrar" del resultado: cierra la ventana y lanza la celebración
+    result.addEventListener("click", (e) => {
+        const btn = e.target.closest(".celebrate-btn");
+        if (!btn) return;
+        modal.hide();
+        bingoCelebration(Number(btn.dataset.serial));
+    });
+
     form.addEventListener("submit", (e) => {
         e.preventDefault();
         const serial = BingoCore.parseSerial(input.value);
@@ -98,12 +109,12 @@
                 ? `<br><small>El patrón se busca en cualquier posición (${placements.length} posibles).</small>`
                 : "";
             verdict = best.missing.length === 0
-                ? `<div class="alert alert-success mb-0"><strong>✅ ¡BINGO válido!</strong> Cumple el patrón.${where}</div>`
+                ? `<div class="alert alert-success mb-0"><strong>✅ ¡BINGO válido!</strong> Cumple el patrón.${where}${celebrateBtn(serial)}</div>`
                 : `<div class="alert alert-warning mb-0"><strong>❌ No cumple el patrón.</strong> Lo más cerca: le faltan ${best.missing.map((i) => flat[i]).join(", ")}${where}</div>`;
         } else {
             const lines = completedLines(hit);
             verdict = lines.length > 0
-                ? `<div class="alert alert-success mb-0"><strong>✅ Línea completa:</strong> ${lines.join(", ")}<br><small>No hay patrón marcado; se revisaron filas, columnas y diagonales.</small></div>`
+                ? `<div class="alert alert-success mb-0"><strong>✅ Línea completa:</strong> ${lines.join(", ")}<br><small>No hay patrón marcado; se revisaron filas, columnas y diagonales.</small>${celebrateBtn(serial)}</div>`
                 : `<div class="alert alert-warning mb-0"><strong>❌ Sin línea completa.</strong><br><small>No hay patrón marcado; se revisaron filas, columnas y diagonales.</small></div>`;
         }
 

@@ -231,7 +231,7 @@ function showWinningNumber(number) {
     winningNumber.style.display = 'block';
     
     // Confetti en el modal
-    confetti({
+    fireConfetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
@@ -658,53 +658,74 @@ function toggleVoice() {
     updateVoiceButton();
 }
 
+/** @type {number|null} Intervalo de los fuegos artificiales de la celebración */
+let celebrationTimer = null;
+
+/** Colores del confeti: dorados + colores de la marca */
+const CONFETTI_COLORS = ['#ffd54f', '#ffb300', '#ff6b6b', '#667eea', '#ffffff', '#4caf50'];
+
+/** Confeti siempre por encima de la tómbola y de la celebración */
+function fireConfetti(options) {
+    confetti({ zIndex: 3100, colors: CONFETTI_COLORS, disableForReducedMotion: true, ...options });
+}
+
 /**
- * Ejecuta la animación de celebración de BINGO
- * 
- * Función principal de celebración que incluye:
- * - Activación del modo oscuro
- * - Múltiples explosiones de confetti animadas
- * - Reproducción de audio de victoria
- * - NO limpia automáticamente (permite revisar el resultado)
+ * Celebración de BINGO a pantalla completa
+ *
+ * Muestra "¡BINGO!" en grande (con el cartón ganador si se conoce),
+ * lanza fuegos artificiales de confeti y reproduce el audio. Pausa el
+ * sorteo automático. Se cierra con "Continuar", clic en cualquier parte o Esc.
+ *
+ * @param {number} [serial] - Serial del cartón ganador (opcional)
  */
-function bingoCelebration() {
-    // Activar modo oscuro para efecto dramático
-    document.getElementById("overley").classList.add("dark-mode");
-    
-    // Reproducir audio de celebración
+function bingoCelebration(serial) {
+    const overlay = document.getElementById('celebration');
+    const sub = document.getElementById('celebrationSub');
+
+    // Que no sigan saliendo números mientras se celebra
+    if (isAutoDrawActive && !isAutoDrawPaused) pauseAutoDraw();
+
+    sub.textContent = serial ? `Cartón #${serial}` : '¡Tenemos un ganador!';
+
+    // Reiniciar la animación de entrada aunque ya estuviera abierta
+    overlay.hidden = true;
+    void overlay.offsetWidth;
+    overlay.hidden = false;
+    document.getElementById('celebrationClose').focus();
+
     playAudio('/assets/fireworks-b.mp3');
-    
-    // Configuración de la animación de confetti
-    let count = 25; // Número total de explosiones
-    
-    // Intervalo para explosiones consecutivas de confetti
-    let interval = setInterval(() => {
-        // Generar posición aleatoria para la explosión
-        let x = Math.random();
-        let y = Math.random() * 0.6;
 
-        // Ejecutar explosión de confetti
-        confetti({
-            particleCount: 120,
-            startVelocity: 60,
+    // Cañones laterales de entrada
+    fireConfetti({ particleCount: 140, angle: 60, spread: 70, startVelocity: 65, origin: { x: 0, y: 0.8 } });
+    fireConfetti({ particleCount: 140, angle: 120, spread: 70, startVelocity: 65, origin: { x: 1, y: 0.8 } });
+
+    // Fuegos artificiales en posiciones al azar
+    clearInterval(celebrationTimer);
+    let count = 20;
+    celebrationTimer = setInterval(() => {
+        fireConfetti({
+            particleCount: 90,
+            startVelocity: 45,
             spread: 360,
-            ticks: 80,
-            origin: { x, y }
+            ticks: 90,
+            origin: { x: 0.1 + Math.random() * 0.8, y: 0.1 + Math.random() * 0.4 },
         });
-
-        count--;
-        
-        // Terminar celebración después de todas las explosiones
-        if (count === 0) {
-            clearInterval(interval);
-            
-            // Solo quitar el overlay después de 3 segundos, pero NO limpiar
-            setTimeout(() => {
-                stopAudio();
-                document.getElementById("overley").classList.remove("dark-mode");
-            }, 3000);
+        if (--count === 0) {
+            clearInterval(celebrationTimer);
+            celebrationTimer = null;
         }
-    }, 600);
+    }, 650);
+}
+
+/** Cierra la celebración y detiene confeti y audio */
+function endCelebration() {
+    const overlay = document.getElementById('celebration');
+    if (overlay.hidden) return;
+    clearInterval(celebrationTimer);
+    celebrationTimer = null;
+    confetti.reset();
+    stopAudio();
+    overlay.hidden = true;
 }
 
 /**
@@ -764,6 +785,8 @@ function initializeBingoTable() {
 cleanBtn.addEventListener("click", () => cleanTable());
 resetGameBtn.addEventListener("click", () => resetGame());
 bingo.addEventListener("click", () => bingoCelebration());
+document.getElementById("celebration").addEventListener("click", () => endCelebration());
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") endCelebration(); });
 tombolaBtn.addEventListener("click", () => {
     // Solo permitir sorteo manual si no está activo el sorteo automático
     if (!isAutoDrawActive) {
