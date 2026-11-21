@@ -22,6 +22,7 @@
 
         .screen { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; gap: 18px; }
         .screen.active { display: flex; }
+        #cardScreen { max-width: 1080px; }
 
         h1 { color: #fff; margin: 8px 0 0; text-shadow: 2px 2px 4px rgba(0,0,0,.3); font-size: 1.9rem; text-align: center; }
         .subtitle { color: rgba(255,255,255,.85); margin: 0; text-align: center; }
@@ -65,8 +66,18 @@
         .error { color: #e53935; font-weight: bold; min-height: 1.3em; margin: 10px 0 0; text-align: center; }
         .stack { display: flex; flex-direction: column; gap: 12px; }
 
+        /* Lista de cartones: uno debajo del otro en celular, lado a lado en pantallas grandes */
+        .cards {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            justify-items: center;
+        }
+        .actions { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 12px; }
+
         /* Cartón */
-        .card { width: 100%; background: #fff; border-radius: 16px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+        .card { width: 100%; max-width: 440px; background: #fff; border-radius: 16px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
         .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .head {
             aspect-ratio: 1 / .8;
@@ -97,14 +108,29 @@
         }
         .num.free { background: linear-gradient(45deg, #ffd54f, #ffb300); border-color: #ffb300; color: #fff; font-size: 1.6rem; cursor: default; }
 
-        .serial {
+        .card-footer {
             margin-top: 12px;
-            text-align: center;
-            font-size: .95rem;
-            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 36px;
         }
+        .serial { font-size: .95rem; color: #666; }
         .serial strong { font-size: 1.35rem; color: #333; letter-spacing: 1px; }
-        .hint { color: rgba(255,255,255,.9); font-size: .9rem; text-align: center; margin: 0; }
+        .card-btns { display: flex; gap: 6px; }
+        .mini-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: .9rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: #eef0ff;
+            color: #4a4fb5;
+        }
+        .mini-btn.danger { background: #ffecec; color: #d32f2f; }
+        .hint { color: rgba(255,255,255,.9); font-size: .9rem; text-align: center; margin: 0; max-width: 440px; }
     </style>
 </head>
 <body>
@@ -121,7 +147,7 @@
         </form>
     </section>
 
-    <!-- 2. Generar cartón -->
+    <!-- 2. Generar primer cartón -->
     <section class="screen" id="generateScreen">
         <h1>🎱 Bingo</h1>
         <p class="subtitle">¡Bienvenido! Genera tu cartón para empezar.</p>
@@ -130,24 +156,25 @@
         </div>
     </section>
 
-    <!-- 3. Cartón -->
+    <!-- 3. Cartones -->
     <section class="screen" id="cardScreen">
-        <h1>🎱 Mi Cartón</h1>
-        <div class="card">
-            <div class="grid" id="grid"></div>
-            <div class="serial">Cartón <strong id="serialLabel">#000000</strong></div>
+        <h1 id="cardsTitle">🎱 Mi Cartón</h1>
+        <div class="cards" id="cards"></div>
+        <p class="hint" id="hint"></p>
+        <div class="actions">
+            <button class="btn secondary" id="addBtn">➕ Agregar otro cartón</button>
+            <button class="btn ghost" id="clearBtn">🧹 Limpiar marcas (nuevo juego)</button>
         </div>
-        <p class="hint">Toca un número para marcarlo. Si cantas BINGO, muestra tu número de cartón.</p>
-        <button class="btn ghost" id="clearBtn">🧹 Limpiar marcas</button>
-        <button class="btn ghost" id="newCardBtn">🔄 Cambiar cartón</button>
     </section>
 
     <script src="/js/card-core.js"></script>
     <script>
         // Contraseña simple (solo para mantener fuera a gente ajena; es visible en el código)
         const PASSWORD = "bingo26";
+        const MAX_CARDS = 3;
         const KEY_UNLOCKED = "bingo_unlocked";
-        const KEY_CARD = "bingo_card";
+        const KEY_CARDS = "bingo_cards";
+        const KEY_CARD_V1 = "bingo_card"; // formato anterior (un solo cartón)
 
         const storage = {
             get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
@@ -156,27 +183,73 @@
         };
 
         const $ = (id) => document.getElementById(id);
-        let state = null; // { serial, marked: [indices 0-24] }
+
+        /** @type {Array<{serial:number, marked:number[]}>} */
+        let cards = [];
 
         function show(screenId) {
             document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === screenId));
         }
 
-        function save() { storage.set(KEY_CARD, state); }
+        function save() { storage.set(KEY_CARDS, cards); }
 
-        function renderCard() {
-            const grid = BingoCore.cardFromSerial(state.serial);
-            const el = $("grid");
-            el.innerHTML = "";
+        function loadCards() {
+            let saved = storage.get(KEY_CARDS);
+            if (!Array.isArray(saved)) {
+                // Migrar del formato anterior de un solo cartón
+                const v1 = storage.get(KEY_CARD_V1);
+                saved = v1 ? [v1] : [];
+                storage.remove(KEY_CARD_V1);
+            }
+            return saved
+                .filter((c) => c && BingoCore.isValidSerial(c.serial))
+                .slice(0, MAX_CARDS)
+                .map((c) => ({ serial: c.serial, marked: Array.isArray(c.marked) ? c.marked : [] }));
+        }
 
+        /** Serial nuevo que no repita uno que el jugador ya tenga. */
+        function newSerial() {
+            let s;
+            do { s = BingoCore.randomSerial(); } while (cards.some((c) => c.serial === s));
+            return s;
+        }
+
+        const anyMarked = () => cards.some((c) => c.marked.length > 0);
+
+        /** Muestra u oculta botones según las reglas:
+         *  - "Cambiar"/"Quitar" solo en cartones sin marcas.
+         *  - "Agregar" solo si hay espacio y ningún cartón tiene marcas (el juego no ha empezado). */
+        function updateControls() {
+            const playing = anyMarked();
+            cards.forEach((card, i) => {
+                const empty = card.marked.length === 0;
+                const el = $("cards").children[i];
+                el.querySelector(".change-btn").hidden = !empty;
+                el.querySelector(".remove-btn").hidden = !(empty && cards.length > 1);
+            });
+            $("addBtn").hidden = playing || cards.length >= MAX_CARDS;
+            $("addBtn").textContent = `➕ Agregar otro cartón (${cards.length}/${MAX_CARDS})`;
+            $("clearBtn").hidden = !playing;
+            $("cardsTitle").textContent = cards.length > 1 ? "🎱 Mis Cartones" : "🎱 Mi Cartón";
+            $("hint").textContent = playing
+                ? "Toca un número para marcarlo. Si cantas BINGO, di el número del cartón ganador."
+                : "Toca un número para marcarlo. Puedes cambiar o agregar cartones hasta que marques el primer número.";
+        }
+
+        function buildCard(card, index) {
+            const wrap = document.createElement("div");
+            wrap.className = "card";
+
+            const gridEl = document.createElement("div");
+            gridEl.className = "grid";
             BingoCore.LETTERS.forEach((l) => {
                 const h = document.createElement("div");
                 h.className = "head";
                 h.textContent = l;
-                el.appendChild(h);
+                gridEl.appendChild(h);
             });
 
-            grid.flat().forEach((value, idx) => {
+            BingoCore.cardFromSerial(card.serial).flat().forEach((value, idx) => {
                 const cell = document.createElement("div");
                 cell.className = "num";
                 if (value === null) {
@@ -184,30 +257,63 @@
                     cell.textContent = "★";
                 } else {
                     cell.textContent = value;
-                    if (state.marked.includes(idx)) cell.classList.add("marked");
+                    if (card.marked.includes(idx)) cell.classList.add("marked");
                     cell.addEventListener("click", () => {
                         const on = cell.classList.toggle("marked");
-                        state.marked = on
-                            ? [...state.marked, idx]
-                            : state.marked.filter((i) => i !== idx);
+                        card.marked = on ? [...card.marked, idx] : card.marked.filter((i) => i !== idx);
                         save();
+                        updateControls();
                     });
                 }
-                el.appendChild(cell);
+                gridEl.appendChild(cell);
             });
+            wrap.appendChild(gridEl);
 
-            $("serialLabel").textContent = "#" + state.serial;
+            const footer = document.createElement("div");
+            footer.className = "card-footer";
+            footer.innerHTML = `
+                <span class="serial">Cartón <strong>#${card.serial}</strong></span>
+                <span class="card-btns">
+                    <button class="mini-btn change-btn">🔄 Cambiar</button>
+                    <button class="mini-btn danger remove-btn">✕ Quitar</button>
+                </span>`;
+            footer.querySelector(".change-btn").addEventListener("click", () => {
+                if (!confirm(`¿Cambiar el cartón #${card.serial} por uno nuevo?`)) return;
+                cards[index] = { serial: newSerial(), marked: [] };
+                save();
+                renderCards();
+            });
+            footer.querySelector(".remove-btn").addEventListener("click", () => {
+                if (!confirm(`¿Quitar el cartón #${card.serial}?`)) return;
+                cards.splice(index, 1);
+                save();
+                renderCards();
+            });
+            wrap.appendChild(footer);
+            return wrap;
+        }
+
+        function renderCards() {
+            if (cards.length === 0) return show("generateScreen");
+            const el = $("cards");
+            el.innerHTML = "";
+            cards.forEach((card, i) => el.appendChild(buildCard(card, i)));
+            updateControls();
             show("cardScreen");
+        }
+
+        function addCard() {
+            if (cards.length >= MAX_CARDS || anyMarked()) return;
+            cards.push({ serial: newSerial(), marked: [] });
+            save();
+            renderCards();
+            $("cards").lastElementChild.scrollIntoView({ behavior: "smooth", block: "start" });
         }
 
         function route() {
             if (!storage.get(KEY_UNLOCKED)) return show("lockScreen");
-            const saved = storage.get(KEY_CARD);
-            if (saved && BingoCore.isValidSerial(saved.serial)) {
-                state = { serial: saved.serial, marked: Array.isArray(saved.marked) ? saved.marked : [] };
-                return renderCard();
-            }
-            show("generateScreen");
+            cards = loadCards();
+            renderCards();
         }
 
         $("lockForm").addEventListener("submit", (e) => {
@@ -223,24 +329,14 @@
             }
         });
 
-        $("generateBtn").addEventListener("click", () => {
-            state = { serial: BingoCore.randomSerial(), marked: [] };
-            save();
-            renderCard();
-        });
+        $("generateBtn").addEventListener("click", addCard);
+        $("addBtn").addEventListener("click", addCard);
 
         $("clearBtn").addEventListener("click", () => {
-            if (!confirm("¿Quitar todas las marcas de tu cartón?")) return;
-            state.marked = [];
+            if (!confirm("¿Quitar las marcas de todos tus cartones? Úsalo solo cuando empiece un juego nuevo.")) return;
+            cards.forEach((c) => { c.marked = []; });
             save();
-            renderCard();
-        });
-
-        $("newCardBtn").addEventListener("click", () => {
-            if (!confirm("¿Seguro? Perderás este cartón (#" + state.serial + ") y se te dará uno nuevo.")) return;
-            storage.remove(KEY_CARD);
-            state = null;
-            show("generateScreen");
+            renderCards();
         });
 
         route();
