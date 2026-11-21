@@ -513,7 +513,7 @@ function updateAutoDrawButtons() {
 const SOUNDS = {
     tombola: '/assets/tombola.mp3',
     fireworks: '/assets/fireworks-b.mp3',
-    number: (n) => `/assets/numeros/${n}.mp3`,
+    number: (n) => `/assets/numeros/${n}.mp3?v=2`, // subir ?v= al regenerar las voces
 };
 
 /** Reproduce el audio de celebración */
