@@ -216,16 +216,13 @@
 
         const anyMarked = () => cards.some((c) => c.marked.length > 0);
 
-        /** Muestra u oculta botones según las reglas:
-         *  - "Cambiar"/"Quitar" solo en cartones sin marcas.
-         *  - "Agregar" solo si hay espacio y ningún cartón tiene marcas (el juego no ha empezado). */
+        /** Muestra u oculta botones. Apenas hay un número marcado en cualquier
+         *  cartón, el juego "empezó": se ocultan Cambiar, Quitar y Agregar en todos. */
         function updateControls() {
             const playing = anyMarked();
-            cards.forEach((card, i) => {
-                const empty = card.marked.length === 0;
-                const el = $("cards").children[i];
-                el.querySelector(".change-btn").hidden = !empty;
-                el.querySelector(".remove-btn").hidden = !(empty && cards.length > 1);
+            [...$("cards").children].forEach((el) => {
+                el.querySelector(".change-btn").hidden = playing;
+                el.querySelector(".remove-btn").hidden = playing || cards.length < 2;
             });
             $("addBtn").hidden = playing || cards.length >= MAX_CARDS;
             $("addBtn").textContent = `➕ Agregar otro cartón (${cards.length}/${MAX_CARDS})`;
